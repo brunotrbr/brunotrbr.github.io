@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>CORS Demo - POST</title>
+  <style>
+    .form-group { margin-bottom: 10px; }
+    label { display: inline-block; width: 150px; }
+    input { width: 300px; }
+  </style>
+</head>
+<body>
+
+  <h2>CORS - Post</h2>
+  
+  <div class="form-group">
+    <label>Endpoint:</label>
+    <input id="endpoint" type="text" value="http://localhost:5294/documentos" />
+  </div>
+
+  <div class="form-group">
+    <label>Nome:</label>
+    <input id="nome" type="text" value="texto" />
+  </div>
+
+  <div class="form-group">
+    <label>Extensão:</label>
+    <input id="extensao" type="text" value="docx" />
+  </div>
+
+  <div class="form-group">
+    <label>Descrição:</label>
+    <input id="descricao" type="text" value="word" />
+  </div>
+
+  <div class="form-group">
+    <label>Usuário Autorizado:</label>
+    <input id="usuario" type="text" value="Bruno" />
+  </div>
+
+  <button onclick="sendRequestPost()">Send POST</button>
+  <button onclick="clearFieldsPost()">Clear</button>
+
+  <br /><br />
+  <label>Response:</label><br />
+  <textarea id="response" rows="10" cols="60" readonly></textarea>
+
+<hr>
+
+<h2>CORS - Get</h2>
+
+  <input id="method" type="text" placeholder="GET" value="GET" />
+  <input id="endpoint" type="text" placeholder="http://localhost:5294/documentos/1" value="http://localhost:5294/documentos/1"  size="60"/>
+  <button onclick="sendRequest()">Send</button>
+  <button onclick="clearFields()">Clear</button>
+
+
+  <br /><br />
+  <textarea id="response" rows="10" cols="60" readonly></textarea>
+
+  <script>
+    async function sendRequestPost() {
+      const endpoint = document.getElementById('endpoint').value;
+      const output = document.getElementById('response');
+      output.value = 'Loading...';
+
+      // 1. Build the object from individual inputs
+      const data = {
+        nome: document.getElementById('nome').value,
+        extensao: document.getElementById('extensao').value,
+        descricao: document.getElementById('descricao').value,
+        usuariosAutorizados: [document.getElementById('usuario').value]
+      };
+
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data) // Convert object to JSON string
+        });
+
+        // 2. Check if the response is actually JSON before parsing
+        const contentType = res.headers.get("content-type");
+        const text = await res.text();
+
+        if (contentType && contentType.includes("application/json")) {
+          const json = JSON.parse(text);
+          output.value = `Status: ${res.status}\n` + JSON.stringify(json, null, 2);
+        } else {
+          // If the server returns HTML (404/500), show the raw text
+          output.value = `Status: ${res.status}\nNon-JSON Response:\n${text}`;
+        }
+
+      } catch (err) {
+        output.value = 'Network/CORS Error: ' + err.message;
+      }
+    }
+
+    function clearFieldsPost() {
+      document.getElementById('nome').value = '';
+      document.getElementById('extensao').value = '';
+      document.getElementById('descricao').value = '';
+      document.getElementById('usuario').value = '';
+      document.getElementById('response').value = '';
+    }
+
+async function sendRequest() {
+      const method   = document.getElementById('method').value.toUpperCase();
+      const endpoint = document.getElementById('endpoint').value;
+      const output   = document.getElementById('response');
+
+      output.value = 'Loading...';
+
+      try {
+        const res  = await fetch(endpoint, { method });
+        const json = await res.json();
+        output.value = JSON.stringify(json, null, 2);
+      } catch (err) {
+        output.value = 'Error: ' + err.message;
+      }
+    }
+
+    async function clearFields() {
+      document.getElementById('method').value = 'GET';
+      document.getElementById('endpoint').value = 'http://localhost:5294/documentos/1';
+      document.getElementById('response').value = '';
+    }
+
+
+
+  </script>
+
+</body>
+</html>
